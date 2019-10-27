@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:id="@+id/talk_layout"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="#ededed"
+    android:orientation="vertical">
+    <include
+        android:id="@+id/talk_toolbar"
+        layout="@layout/common_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_talks"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/talk_toolbar"
+        app:layout_constraintBottom_toTopOf="@+id/message_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="0dp" />
+    <LinearLayout
+        android:id="@+id/message_bottom"
+        android:layout_width="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_height="60dp"
+        android:background="@drawable/message_bottom"
+        android:orientation="horizontal">
+        <ImageView
+            android:id="@+id/send_picture"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/tupian"
+            android:layout_marginStart="15dp"/>
+        <EditText
+            android:layout_marginTop="8dp"
+            android:id="@+id/putMessage"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="15dp"
+            android:layout_width="220dp"
+            android:textColor="#000000"
+            android:theme="@style/EditTextStyle"
+            android:inputType="textMultiLine"
+            android:fitsSystemWindows="true"
+            />
+        <Button
+            android:id="@+id/send_message"
+            android:layout_marginTop="6dp"
+            android:layout_width="60dp"
+            android:layout_height="40dp"
+            android:text="发送"
+            android:textColor="#ffffff"
+            android:layout_marginStart="10dp"
+            android:background="@drawable/round_button2"
+            android:textSize="12sp" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    >
+
+    <include
+        android:id="@+id/login_toolbar"
+        layout="@layout/common_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+    </include>
+
+    <LinearLayout
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_marginTop="80dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="15dp"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/putID"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:textColor="#000000"
+            android:inputType="text"
+            android:hint="  请输入微信号"
+            android:theme="@style/EditTextStyle"
+            />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="15dp"
+        android:layout_marginTop="30dp"
+        android:orientation="horizontal"
+        >
+
+        <EditText
+            android:id="@+id/putPassword"
+            android:layout_height="wrap_content"
+            android:textColor="@color/colorPrimaryDark"
+            android:layout_width="match_parent"
+            android:inputType="textPassword"
+            android:hint="  请输入密码"
+            android:theme="@style/EditTextStyle"
+            />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/login_btn_main"
+        android:layout_height="wrap_content"
+        android:background="@drawable/round_button2"
+        android:text="登录"
+        android:textSize="18sp"
+        android:textColor="#ffffff"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="40dp"
+        android:textAllCaps="false"
+        android:layout_width="320dp"/>
+
+    <Button
+        android:id="@+id/regist_btn_main"
+        android:layout_height="wrap_content"
+        android:background="@drawable/round_button"
+        android:text="一键注册成为新用户"
+        android:textSize="16sp"
+        android:textColor="@color/wetalk_dgreen"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="30dp"
+        android:textAllCaps="false"
+        android:layout_width="200dp"/>
+</LinearLayout>
