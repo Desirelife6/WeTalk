@@ -1,6 +1,7 @@
 package com.twtstudio.wetalk.Model
 
 import android.app.Activity
+import android.content.Context
 import android.icu.util.Calendar
 import android.os.Build
 import android.util.Log
@@ -132,6 +133,30 @@ object NetService {
             launch(UI) {
                 act.mTabList[1].setFriendList(bean.friends)
             }
+            //mainSocket.close()
+        }
+    }
+
+    fun deleteService(name: String, token: String, to: String,act: Context) {
+        var message: String
+        var temp: String
+        launch {
+            //val mainSocket = Socket(host, 12000)
+            os = mainSocket.getOutputStream()
+            ins = mainSocket.getInputStream()
+            val logoutMessage = "POST /delete HTTP/1.1\n^-^\n" +
+                    "{\"username\":\"$name\",  \"token\":\"$token\",  \"newfriend\":\"$to\"}\n^-^\n"
+
+            os.write(logoutMessage.toByteArray())
+            lastSendTime = System.currentTimeMillis()
+            val reader = BufferedReader(InputStreamReader(ins))
+            temp = reader.readLine()
+            val gson = Gson()
+            val bean = gson.fromJson(temp, makeFriendsBean::class.java)
+            launch(UI) {
+                Toast.makeText(act,bean.msg,Toast.LENGTH_LONG).show()
+            }
+
             //mainSocket.close()
         }
     }

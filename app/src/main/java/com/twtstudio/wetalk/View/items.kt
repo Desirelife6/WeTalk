@@ -154,7 +154,8 @@ class FriendItem(val avatar: String, val name: String) : Item {
             return com.twtstudio.wetalk.View.FriendItem.ViewHolder(
                 view,
                 view.iv_avatar2,
-                view.tv_name2
+                view.tv_name2,
+                view.friend_delete
             )
         }
 
@@ -166,13 +167,17 @@ class FriendItem(val avatar: String, val name: String) : Item {
                 it.context.startActivity<TalkActivity>()
                 Hawk.put("talkto",item.name)
             }
+            holder.delete.setOnClickListener {
+                NetService.deleteService(Hawk.get("userID",""),Hawk.get("token",""),item.name, holder.view.context)
+            }
         }
     }
 
     class ViewHolder(
         val view: View,
         val imageView: ImageView,
-        val name: TextView
+        val name: TextView,
+        val delete:ImageView
     ) :
         RecyclerView.ViewHolder(view)
 
