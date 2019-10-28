@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import cn.edu.twt.retrox.recyclerviewdsl.withItems
 import com.orhanobut.hawk.Hawk
+import com.twtstudio.wetalk.Model.MessageToRead
 import com.twtstudio.wetalk.R
 import com.twtstudio.wetalk.View.setFriendItem
 import com.twtstudio.wetalk.View.setIntroItem
@@ -35,9 +36,13 @@ class TabFragment : Fragment() {
 
     fun setTalkList() {
         content_rc.withItems {
-            setTalkItem("show2","我用于聊天","","","")
-            setTalkItem("test3", "我是一个不在线的好友", "", "", "")
-            setTalkItem("test2", "我不是你的好友", "", "", "")
+            for (i in MessageToRead) {
+                val show = i.messages[i.messages.size - 1]
+                if (!show.text.contains("https://"))
+                    setTalkItem(i.name, show.text, "", "", show.time)
+                else
+                    setTalkItem(i.name, "[图片]", "","", show.time)
+            }
         }
     }
 

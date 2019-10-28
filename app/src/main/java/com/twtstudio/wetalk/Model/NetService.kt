@@ -207,9 +207,23 @@ object NetService {
             val gson = Gson()
             Log.d("HHHH",temp)
             val bean = gson.fromJson(temp, sendMessageBean::class.java)
+
+            var flag = false
+            for (i in MessageToRead) {
+                if (i.name == newfriend) {
+                    i.messages.add(showBean(msg, "$hour:$minute", RIGHT))
+                    flag = true
+                }
+            }
+            if (!flag) {
+                val temp = ReadBean(newfriend)
+                temp.messages.add(showBean(msg, "$hour:$minute", RIGHT))
+                MessageToRead.add(temp)
+            }
+
             launch(UI) {
                 if (bean.code == "0") {
-                    act.itemAdapter.addItem(itemBean(msg,"$hour:$minute"), RIGHT)
+                    act.itemAdapter.addItem(showBean(msg,"$hour:$minute", RIGHT))
                     act.recyclerView.smoothScrollToPosition(act.i)//移动到指定位置
                     act.i++
                 } else
@@ -294,7 +308,7 @@ object NetService {
             val bean = gson.fromJson(temp, sendMessageBean::class.java)
             launch(UI) {
                 if (bean.code == "0") {
-                    act.itemAdapter.addItem(itemBean(msg,"$hour:$minute"), RIGHT)
+                    act.itemAdapter.addItem(showBean(msg,"$hour:$minute", RIGHT))
                     act.recyclerView.smoothScrollToPosition(act.i)//移动到指定位置
                     act.i++
                 } else
@@ -330,7 +344,7 @@ object NetService {
             val bean = gson.fromJson(temp, sendMessageBean::class.java)
             launch(UI) {
                 if (bean.code == "0") {
-                    act.itemAdapter.addItem(itemBean(name,"$hour:$minute"), RIGHT)
+                    act.itemAdapter.addItem(showBean("${file}已发送","$hour:$minute", RIGHT))
                     act.recyclerView.smoothScrollToPosition(act.i)//移动到指定位置
                     act.i++
                 }else{

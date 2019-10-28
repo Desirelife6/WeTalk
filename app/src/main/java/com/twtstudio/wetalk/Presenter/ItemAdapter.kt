@@ -1,6 +1,7 @@
 package com.twtstudio.wetalk.Presenter
 
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
 import android.view.LayoutInflater
@@ -14,13 +15,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.twtstudio.wetalk.R
 import com.twtstudio.wetalk.View.itemBean
+import com.twtstudio.wetalk.View.showBean
 
 import java.util.ArrayList
 
 class ItemAdapter(private var context: Context) :
     RecyclerView.Adapter<ItemAdapter.MyViewHolder>() {
 
-    private var list: MutableList<itemBean> = ArrayList()
+    private var list: MutableList<showBean> = ArrayList()
     private var leftOrRight: Int = 0
 
 
@@ -38,8 +40,14 @@ class ItemAdapter(private var context: Context) :
 
     @RequiresApi(Build.VERSION_CODES.N)
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
-        holder.tvtime.text = list[position].time
-        if (leftOrRight == com.twtstudio.wetalk.View.LEFT) {
+        val str =  list[position].time.split(":")
+        if(str[1].length == 1){
+            holder.tvtime.text = "${str[0]}:0${str[1]}"
+        }else{
+            holder.tvtime.text = "${str[0]}:${str[1]}"
+        }
+
+        if (list[position].loc == com.twtstudio.wetalk.View.LEFT) {
             if(list[position].text.contains("https://")){
                 holder.tvLeft.visibility = View.GONE
                 holder.tvRight.visibility = View.GONE
@@ -57,7 +65,7 @@ class ItemAdapter(private var context: Context) :
                 holder.tvLeft.text = list[position].text
             }
 
-        } else if (leftOrRight == com.twtstudio.wetalk.View.RIGHT) {
+        } else if (list[position].loc == com.twtstudio.wetalk.View.RIGHT) {
             if(list[position].text.contains("https://")){
                 holder.tvLeft.visibility = View.GONE
                 holder.tvRight.visibility = View.GONE
@@ -78,8 +86,7 @@ class ItemAdapter(private var context: Context) :
     }
 
     //添加子项
-    fun addItem(str: itemBean, leftOrRight: Int) {
-        this.leftOrRight = leftOrRight
+    fun addItem(str: showBean) {
         list.add(str)
         notifyItemInserted(list.size - 1)
     }

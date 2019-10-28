@@ -27,6 +27,8 @@ import java.util.ArrayList
 import com.twtstudio.wetalk.Presenter.TabFragment
 import com.twtstudio.wetalk.Presenter.enableLightStatusBarMode
 import com.twtstudio.wetalk.R
+import kotlinx.coroutines.android.UI
+import kotlinx.coroutines.launch
 
 
 class MainActivity : AppCompatActivity() {
@@ -43,19 +45,17 @@ class MainActivity : AppCompatActivity() {
             NetService.ins = listenSocket.getInputStream()
             val reader = BufferedReader(InputStreamReader(NetService.ins))
             val gson = Gson()
-            lateinit var str: String
             while (true) {
                 val message = reader.readLine()
-                str = message.toString()
                 when {
-                    str.contains("friendrequest") -> {
+                    message.contains("friendrequest") -> {
                         val bean = gson.fromJson(message, receiveMakeBean::class.java)
                         val temMessage = handler.obtainMessage()
                         temMessage.what = NETUPDATE
                         temMessage.obj = bean.from
                         handler.sendMessage(temMessage)
                     }
-                    str.contains("makefriendres") -> {
+                    message.contains("makefriendsres") -> {
                         val bean = gson.fromJson(message, receiveResBean::class.java)
                         handler.post {
                             if (!this.isFinishing) {
@@ -64,17 +64,33 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                     else -> {
-//                        val bean = gson.fromJson(message, receiveMessageBean::class.java)
-//                        var flag = false
-//                        for (i in MessageToRead){
-//                            if(i.name == bean.from){
-//                                i.messages.add(itemBean(bean.msg, bean.time))
-//                                flag = true
-//                            }
-//                        }
-//                        if(!flag){
-//                            MessageToRead.add(ReadBean(bean.from))
-//                        }
+                        val bean = gson.fromJson(message, receiveMessageBean::class.java)
+                        var flag = false
+                        for (i in MessageToRead) {
+                            if (i.name == bean.from) {
+                                i.messages.add(showBean(bean.msg, bean.time, LEFT))
+                                flag = true
+                            }
+                        }
+                        if (!flag) {
+                            val temp = ReadBean(bean.from)
+                            temp.messages.add(showBean(bean.msg, bean.time, LEFT))
+                            MessageToRead.add(temp)
+                        }
+                        launch(UI) {
+                            if (!bean.msg.contains("https://"))
+                                Toast.makeText(
+                                    this@MainActivity,
+                                    "${bean.from}说：${bean.msg}",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            else
+                                Toast.makeText(
+                                    this@MainActivity,
+                                    "${bean.from}给您发送了照片",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                        }
                     }
                 }
                 Log.d("HHHH", message)

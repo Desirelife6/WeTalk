@@ -7,7 +7,9 @@ import android.icu.util.Calendar
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Environment
 import android.os.Handler
+import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -33,7 +35,7 @@ import java.io.*
 
 
 class TalkActivity : AppCompatActivity() {
-    val SAVE_REAL_PATH = "/storage/emulated/0"
+    val SAVE_REAL_PATH = ""
     val SAVE_REAL_DIR = "/storage/emulated/0"
     val NETUPDATE = 10
     val WRITEFILE = 11
@@ -56,23 +58,28 @@ class TalkActivity : AppCompatActivity() {
             when (msg.what) {
                 NETUPDATE -> {
                     val list = msg.obj.toString().split("<>?")
-                    addText(itemBean(list[0],list[1]))
+                    runOnUiThread {
+                        addText(itemBean(list[0], list[1]))
+                    }
                 }
                 WRITEFILE -> {
                     val list = msg.obj.toString().split("<>?")
-                    addText(itemBean("${list[0]}: ${list[2]}",list[1]))
-                    Toast.makeText(this,"文件已储存为$SAVE_REAL_PATH/$list[0]",Toast.LENGTH_LONG).show()
+                    addText(itemBean("${list[0]}: ${list[2]}", list[1]))
+                    Toast.makeText(this, "文件已储存为$SAVE_REAL_PATH/$list[0]", Toast.LENGTH_LONG).show()
                 }
             }
             false
         })
 
-        for (i in MessageToRead.indices){
-            if(MessageToRead[i].name == t_name){
-                for(j in MessageToRead[i].messages){
-                    addText(j)
+
+        for (i in MessageToRead.indices) {
+            if (MessageToRead[i].name == t_name) {
+                for (j in MessageToRead[i].messages) {
+                    if(j.loc == LEFT)
+                        addText(itemBean(j.text,j.time))
+                    else
+                        sendText(itemBean(j.text,j.time))
                 }
-                MessageToRead.removeAt(i)
                 break
             }
         }
@@ -134,15 +141,17 @@ class TalkActivity : AppCompatActivity() {
                     val list = FilePickerManager.obtainData()
                     val file = File(list[0])
                     val realName = list[0].split("/")
-                    sendText(itemBean(list[0],"$hour:$minute"))
+                    sendText(itemBean(list[0], "$hour:$minute"))
 
                     crFilewriteData()
-                    NetService.sendFileService(Hawk.get("userID", ""),
+                    NetService.sendFileService(
+                        Hawk.get("userID", ""),
                         Hawk.get("token", ""),
                         Hawk.get("talkto", ""),
                         file.readBytes(),
                         realName[realName.size - 1],
-                        this)
+                        this
+                    )
                 } else {
                     Toast.makeText(this, "似乎什么也没有选择呢", Toast.LENGTH_SHORT).show()
                 }
@@ -151,12 +160,13 @@ class TalkActivity : AppCompatActivity() {
     }
 
     fun addText(msg: itemBean) {
-        itemAdapter.addItem(msg, LEFT)
+        itemAdapter.addItem(showBean(msg.text, msg.time, LEFT))
         recyclerView.smoothScrollToPosition(i)//移动到指定位置
         i++
     }
+
     fun sendText(msg: itemBean) {
-        itemAdapter.addItem(msg, RIGHT)
+        itemAdapter.addItem(showBean(msg.text, msg.time, RIGHT))
         recyclerView.smoothScrollToPosition(i)//移动到指定位置
         i++
     }
@@ -215,7 +225,7 @@ class TalkActivity : AppCompatActivity() {
                             }
 
                         }
-                        str.contains("makefriendres") -> {
+                        str.contains("makefriendsres") -> {
                             val bean = gson.fromJson(message, receiveResBean::class.java)
                             act.runOnUiThread {
                                 if (!act.isFinishing) {
@@ -223,12 +233,12 @@ class TalkActivity : AppCompatActivity() {
                                 }
                             }
                         }
-                        str.contains("filename")->{
+                        str.contains("filename") -> {
                             val bean = gson.fromJson(message, receiveFileBean::class.java)
                             val tempMessage = handler.obtainMessage()
                             tempMessage.what = WRITEFILE
-                            tempMessage.obj = bean.filename + "<>?" + bean.time+ "<>?"+ bean.msg
-                            if(bean.from == t_name){
+                            tempMessage.obj = bean.filename + "<>?" + bean.time + "<>?" + bean.msg
+                            if (bean.from == t_name) {
                                 handler.sendMessage(tempMessage)
                             }
                         }
@@ -268,9 +278,9 @@ class TalkActivity : AppCompatActivity() {
             outStream.write("json数据".toByteArray())
             outStream.close()
         } catch (e: FileNotFoundException) {
-            Toast.makeText(this,"文件不存在",Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "文件不存在", Toast.LENGTH_LONG).show()
         } catch (e: IOException) {
-            Toast.makeText(this,"读写出现错误",Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "读写出现错误", Toast.LENGTH_LONG).show()
         }
 
     }
