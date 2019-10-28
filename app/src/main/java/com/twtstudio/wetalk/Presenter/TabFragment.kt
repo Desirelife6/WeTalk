@@ -11,6 +11,10 @@ import androidx.recyclerview.widget.RecyclerView
 import cn.edu.twt.retrox.recyclerviewdsl.withItems
 import com.orhanobut.hawk.Hawk
 import com.twtstudio.wetalk.R
+import com.twtstudio.wetalk.View.setFriendItem
+import com.twtstudio.wetalk.View.setIntroItem
+import com.twtstudio.wetalk.View.setProfileItem
+import com.twtstudio.wetalk.View.setTalkItem
 import kotlinx.android.synthetic.main.fragment_layout.*
 
 class TabFragment : Fragment() {

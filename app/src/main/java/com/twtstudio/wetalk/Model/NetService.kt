@@ -24,6 +24,7 @@ val listenSocket = Socket(host, 12333)
 var lastSendTime: Long = 0
 val mainSocket = Socket(host, 12000)
 val messageSocket = Socket(host, 13000)
+val MessageToRead = arrayListOf<ReadBean>()
 
 object NetService {
     lateinit var os: OutputStream
@@ -204,10 +205,11 @@ object NetService {
             val reader = BufferedReader(InputStreamReader(ins))
             temp = reader.readLine()
             val gson = Gson()
+            Log.d("HHHH",temp)
             val bean = gson.fromJson(temp, sendMessageBean::class.java)
             launch(UI) {
                 if (bean.code == "0") {
-                    act.itemAdapter.addItem(msg, com.twtstudio.wetalk.View.RIGHT)
+                    act.itemAdapter.addItem(itemBean(msg,"$hour:$minute"), RIGHT)
                     act.recyclerView.smoothScrollToPosition(act.i)//移动到指定位置
                     act.i++
                 } else
@@ -292,11 +294,48 @@ object NetService {
             val bean = gson.fromJson(temp, sendMessageBean::class.java)
             launch(UI) {
                 if (bean.code == "0") {
-                    act.itemAdapter.addItem(msg, com.twtstudio.wetalk.View.RIGHT)
+                    act.itemAdapter.addItem(itemBean(msg,"$hour:$minute"), RIGHT)
                     act.recyclerView.smoothScrollToPosition(act.i)//移动到指定位置
                     act.i++
                 } else
                     Toast.makeText(act, bean.msg, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.N)
+    fun sendFileService(
+        name: String,
+        token: String,
+        newfriend: String,
+        msg: ByteArray,
+        file: String,
+        act: TalkActivity
+    ) {
+        var message: String
+        var temp: String
+        launch {
+            os = mainSocket.getOutputStream()
+            ins = mainSocket.getInputStream()
+            val calendar = Calendar.getInstance()
+            val hour = calendar.get(Calendar.HOUR_OF_DAY)
+            val minute = calendar.get(Calendar.MINUTE)
+            val logoutMessage = "POST /sendFile HTTP/1.1\n^-^\n" +
+                    "{\"username\":\"$name\",  \"token\":\"$token\",  \"to\":\"$newfriend\",  \"msg\":\"${msg}\",  \"filename\":\"$file\",  \"time\":\"$hour:$minute\"}\n^-^\n"
+            os.write(logoutMessage.toByteArray())
+            lastSendTime = System.currentTimeMillis()
+            val reader = BufferedReader(InputStreamReader(ins))
+            temp = reader.readLine()
+            val gson = Gson()
+            val bean = gson.fromJson(temp, sendMessageBean::class.java)
+            launch(UI) {
+                if (bean.code == "0") {
+                    act.itemAdapter.addItem(itemBean(name,"$hour:$minute"), RIGHT)
+                    act.recyclerView.smoothScrollToPosition(act.i)//移动到指定位置
+                    act.i++
+                }else{
+                    Toast.makeText(act, bean.msg, Toast.LENGTH_LONG).show()
+                }
             }
         }
     }

@@ -1,5 +1,7 @@
 package com.twtstudio.wetalk.View
 
+import android.app.Activity
+import android.content.Intent
 import android.graphics.Color
 import android.icu.util.Calendar
 import android.os.Build
@@ -25,24 +27,22 @@ import com.twtstudio.wetalk.R
 import kotlinx.android.synthetic.main.activity_talk.*
 import kotlinx.android.synthetic.main.common_toolbar.*
 import kotlinx.android.synthetic.main.warn_popup.view.*
+import me.rosuh.filepicker.config.FilePickerManager
 import org.jetbrains.anko.dip
-import java.io.BufferedReader
-import java.io.InputStreamReader
+import java.io.*
 
 
 class TalkActivity : AppCompatActivity() {
+    val SAVE_REAL_PATH = "/storage/emulated/0"
+    val SAVE_REAL_DIR = "/storage/emulated/0"
     val NETUPDATE = 10
+    val WRITEFILE = 11
     lateinit var recyclerView: RecyclerView
     lateinit var itemAdapter: ItemAdapter
     var i = 0
     lateinit var handler: Handler
     val t_name = Hawk.get("talkto", "")
-    private val pictureList = arrayOf(
-        "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1572194006977&di=9b3ff8958ed1f99e525823b21115367c&imgtype=0&src=http%3A%2F%2Fztd00.photos.bdimg.com%2Fztd%2Fw%3D700%3Bq%3D50%2Fsign%3D5a05e4b4890a19d8cb03860503c1f3b6%2F0bd162d9f2d3572c876521d98313632762d0c334.jpg",
-        "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1572194006977&di=00595d585367a90ef0d2b0cbffe6d405&imgtype=0&src=http%3A%2F%2Fm.magicyourlife101.com%2Fimages%2FT1.Z6BFCpXXXXXXXXX_%2521%25210-item_pic.jpg_360x360.jpg",
-        "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1572194039726&di=4694a9efee2e05ee63fc608a9d8581dd&imgtype=jpg&src=http%3A%2F%2Fimg.mp.itc.cn%2Fupload%2F20170227%2F03dccef19ec642f58027bb8b39404274.jpeg",
-        "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1572194006977&di=1628a234ef34b095f21dee53ef3bfbee&imgtype=0&src=http%3A%2F%2Fwww.iopen.com.cn%2Fupload%2F201812%2F18%2F1545127156600591.jpeg"
-    )
+
 
     @RequiresApi(Build.VERSION_CODES.N)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,11 +55,28 @@ class TalkActivity : AppCompatActivity() {
         handler = Handler(Handler.Callback { msg ->
             when (msg.what) {
                 NETUPDATE -> {
-                    addText(msg.obj.toString())
+                    val list = msg.obj.toString().split("<>?")
+                    addText(itemBean(list[0],list[1]))
+                }
+                WRITEFILE -> {
+                    val list = msg.obj.toString().split("<>?")
+                    addText(itemBean("${list[0]}: ${list[2]}",list[1]))
+                    Toast.makeText(this,"文件已储存为$SAVE_REAL_PATH/$list[0]",Toast.LENGTH_LONG).show()
                 }
             }
             false
         })
+
+        for (i in MessageToRead.indices){
+            if(MessageToRead[i].name == t_name){
+                for(j in MessageToRead[i].messages){
+                    addText(j)
+                }
+                MessageToRead.removeAt(i)
+                break
+            }
+        }
+
 
         talkHeartBeatTest(this)
     }
@@ -83,7 +100,13 @@ class TalkActivity : AppCompatActivity() {
             )
             putMessage.text.clear()
         }
-        add_friends.visibility = View.GONE
+        main_refresh.visibility = View.GONE
+        add_friends.setOnClickListener {
+            FilePickerManager
+                .from(this)
+                .forResult(FilePickerManager.REQUEST_CODE)
+        }
+
         send_picture.setOnClickListener {
             val rando = Calendar.getInstance().get(Calendar.MILLISECOND) % 4
 
@@ -98,22 +121,42 @@ class TalkActivity : AppCompatActivity() {
 
     }
 
-    fun addText(msg: String) {
+
+    @RequiresApi(Build.VERSION_CODES.N)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        when (requestCode) {
+            FilePickerManager.REQUEST_CODE -> {
+                if (resultCode == Activity.RESULT_OK) {
+                    val calendar = Calendar.getInstance()
+                    val hour = calendar.get(Calendar.HOUR_OF_DAY)
+                    val minute = calendar.get(Calendar.MINUTE)
+                    val list = FilePickerManager.obtainData()
+                    val file = File(list[0])
+                    val realName = list[0].split("/")
+                    sendText(itemBean(list[0],"$hour:$minute"))
+
+                    crFilewriteData()
+                    NetService.sendFileService(Hawk.get("userID", ""),
+                        Hawk.get("token", ""),
+                        Hawk.get("talkto", ""),
+                        file.readBytes(),
+                        realName[realName.size - 1],
+                        this)
+                } else {
+                    Toast.makeText(this, "似乎什么也没有选择呢", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    fun addText(msg: itemBean) {
         itemAdapter.addItem(msg, LEFT)
         recyclerView.smoothScrollToPosition(i)//移动到指定位置
         i++
     }
-
-    fun leftClick(v: View) {
-        //  第一个参数指定发出内容，第二参数指定发出的是左还是右
-        itemAdapter.addItem("右边你好$i", LEFT)
-        recyclerView.smoothScrollToPosition(i)//移动到指定位置
-        i++
-    }
-
-    fun rightClick(v: View) {
-        //  第一个参数指定发出内容，第二参数指定发出的是左还是右
-        itemAdapter.addItem("左边你好$i", RIGHT)
+    fun sendText(msg: itemBean) {
+        itemAdapter.addItem(msg, RIGHT)
         recyclerView.smoothScrollToPosition(i)//移动到指定位置
         i++
     }
@@ -128,7 +171,6 @@ class TalkActivity : AppCompatActivity() {
                 while (true) {
                     val message = reader.readLine()
                     str = message.toString()
-                    Log.d("HHHH", "str")
                     when {
                         str.contains("friendrequest") -> {
                             val bean = gson.fromJson(message, receiveMakeBean::class.java)
@@ -181,19 +223,78 @@ class TalkActivity : AppCompatActivity() {
                                 }
                             }
                         }
+                        str.contains("filename")->{
+                            val bean = gson.fromJson(message, receiveFileBean::class.java)
+                            val tempMessage = handler.obtainMessage()
+                            tempMessage.what = WRITEFILE
+                            tempMessage.obj = bean.filename + "<>?" + bean.time+ "<>?"+ bean.msg
+                            if(bean.from == t_name){
+                                handler.sendMessage(tempMessage)
+                            }
+                        }
                         else -> {
                             val bean = gson.fromJson(message, receiveMessageBean::class.java)
                             val temMessage = handler.obtainMessage()
                             temMessage.what = NETUPDATE
-                            temMessage.obj = bean.msg
+                            temMessage.obj = bean.msg + "<>?" + bean.time
                             if (bean.from == t_name)
                                 handler.sendMessage(temMessage)
                         }
                     }
+                    Log.d("HHHH", "13000：$message")
                 }
             }
         }
         Thread(listenforMessage).start()
     }
+
+    private fun createFolder() {
+        //新建一个File，传入文件夹目录
+        val file = File(SAVE_REAL_DIR)
+        //判断文件夹是否存在，如果不存在就创建，否则不创建
+        if (!file.exists()) {
+            //通过file的mkdirs()方法创建目录中包含却不存在的文件夹
+            file.mkdirs()
+        }
+    }
+
+
+    // 创建文件 写入文件内容
+    private fun crFilewriteData() {
+        val saveFile = File(SAVE_REAL_PATH, "log.txt")
+        var outStream: FileOutputStream? = null
+        try {
+            outStream = FileOutputStream(saveFile)
+            outStream.write("json数据".toByteArray())
+            outStream.close()
+        } catch (e: FileNotFoundException) {
+            Toast.makeText(this,"文件不存在",Toast.LENGTH_LONG).show()
+        } catch (e: IOException) {
+            Toast.makeText(this,"读写出现错误",Toast.LENGTH_LONG).show()
+        }
+
+    }
+
+    private fun xxFileWriteData() {
+        val file = File(SAVE_REAL_PATH, "log.txt")
+        var raf: RandomAccessFile? = null
+        try {
+            //如果为追加则在原来的基础上继续写文件
+            raf = RandomAccessFile(file, "rw")
+            raf!!.seek(file.length())
+            raf.write("sadasdasdas".toByteArray())
+            raf.write("\n".toByteArray())
+        } catch (e: IOException) {
+
+        }
+
+    }
+
+    private val pictureList = arrayOf(
+        "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1572194006977&di=9b3ff8958ed1f99e525823b21115367c&imgtype=0&src=http%3A%2F%2Fztd00.photos.bdimg.com%2Fztd%2Fw%3D700%3Bq%3D50%2Fsign%3D5a05e4b4890a19d8cb03860503c1f3b6%2F0bd162d9f2d3572c876521d98313632762d0c334.jpg",
+        "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1572194006977&di=00595d585367a90ef0d2b0cbffe6d405&imgtype=0&src=http%3A%2F%2Fm.magicyourlife101.com%2Fimages%2FT1.Z6BFCpXXXXXXXXX_%2521%25210-item_pic.jpg_360x360.jpg",
+        "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1572194039726&di=4694a9efee2e05ee63fc608a9d8581dd&imgtype=jpg&src=http%3A%2F%2Fimg.mp.itc.cn%2Fupload%2F20170227%2F03dccef19ec642f58027bb8b39404274.jpeg",
+        "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1572194006977&di=1628a234ef34b095f21dee53ef3bfbee&imgtype=0&src=http%3A%2F%2Fwww.iopen.com.cn%2Fupload%2F201812%2F18%2F1545127156600591.jpeg"
+    )
 
 }

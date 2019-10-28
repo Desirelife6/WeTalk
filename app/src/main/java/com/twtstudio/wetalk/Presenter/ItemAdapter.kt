@@ -2,7 +2,6 @@ package com.twtstudio.wetalk.Presenter
 
 
 import android.content.Context
-import android.icu.util.Calendar
 import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
@@ -14,13 +13,14 @@ import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.twtstudio.wetalk.R
+import com.twtstudio.wetalk.View.itemBean
 
 import java.util.ArrayList
 
 class ItemAdapter(private var context: Context) :
     RecyclerView.Adapter<ItemAdapter.MyViewHolder>() {
 
-    private var list: MutableList<String> = ArrayList()
+    private var list: MutableList<itemBean> = ArrayList()
     private var leftOrRight: Int = 0
 
 
@@ -38,18 +38,15 @@ class ItemAdapter(private var context: Context) :
 
     @RequiresApi(Build.VERSION_CODES.N)
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
-        val calendar = Calendar.getInstance()
-        val hour = calendar.get(Calendar.HOUR_OF_DAY)
-        val minute = calendar.get(Calendar.MINUTE)
-        holder.tvtime.text = "$hour:$minute"
+        holder.tvtime.text = list[position].time
         if (leftOrRight == com.twtstudio.wetalk.View.LEFT) {
-            if(list[position].contains("https://")){
+            if(list[position].text.contains("https://")){
                 holder.tvLeft.visibility = View.GONE
                 holder.tvRight.visibility = View.GONE
                 holder.ivLeft.visibility = View.VISIBLE
                 holder.ivRight.visibility = View.GONE
                 Glide.with(holder.view)
-                    .load(list[position])
+                    .load(list[position].text)
                     .centerCrop()
                     .into(holder.ivLeft)
             }else{
@@ -57,17 +54,17 @@ class ItemAdapter(private var context: Context) :
                 holder.tvRight.visibility = View.GONE
                 holder.ivLeft.visibility = View.GONE
                 holder.ivRight.visibility = View.GONE
-                holder.tvLeft.text = list[position]
+                holder.tvLeft.text = list[position].text
             }
 
         } else if (leftOrRight == com.twtstudio.wetalk.View.RIGHT) {
-            if(list[position].contains("https://")){
+            if(list[position].text.contains("https://")){
                 holder.tvLeft.visibility = View.GONE
                 holder.tvRight.visibility = View.GONE
                 holder.ivLeft.visibility = View.GONE
                 holder.ivRight.visibility = View.VISIBLE
                 Glide.with(holder.view)
-                    .load(list[position])
+                    .load(list[position].text)
                     .centerCrop()
                     .into(holder.ivRight)
             }else{
@@ -75,13 +72,13 @@ class ItemAdapter(private var context: Context) :
                 holder.tvRight.visibility = View.VISIBLE
                 holder.ivLeft.visibility = View.GONE
                 holder.ivRight.visibility = View.GONE
-                holder.tvRight.text = list[position]
+                holder.tvRight.text = list[position].text
             }
         }
     }
 
     //添加子项
-    fun addItem(str: String, leftOrRight: Int) {
+    fun addItem(str: itemBean, leftOrRight: Int) {
         this.leftOrRight = leftOrRight
         list.add(str)
         notifyItemInserted(list.size - 1)

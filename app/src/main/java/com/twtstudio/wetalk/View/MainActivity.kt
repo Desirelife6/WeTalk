@@ -64,7 +64,17 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                     else -> {
-                        val bean = gson.fromJson(message, receiveMessageBean::class.java)
+//                        val bean = gson.fromJson(message, receiveMessageBean::class.java)
+//                        var flag = false
+//                        for (i in MessageToRead){
+//                            if(i.name == bean.from){
+//                                i.messages.add(itemBean(bean.msg, bean.time))
+//                                flag = true
+//                            }
+//                        }
+//                        if(!flag){
+//                            MessageToRead.add(ReadBean(bean.from))
+//                        }
                     }
                 }
                 Log.d("HHHH", message)
@@ -80,7 +90,7 @@ class MainActivity : AppCompatActivity() {
         handler = Handler(Handler.Callback { msg ->
             when (msg.what) {
                 NETUPDATE -> {
-                    runOnUiThread{
+                    runOnUiThread {
                         //showWarnWindow(msg.obj.toString())
                         NetService.confirmRequestService(
                             Hawk.get("userID", ""),
@@ -88,7 +98,7 @@ class MainActivity : AppCompatActivity() {
                             msg.obj.toString(),
                             this@MainActivity
                         )
-                        Toast.makeText(this,"${msg.obj}已经添加你为好友",Toast.LENGTH_LONG).show()
+                        Toast.makeText(this, "${msg.obj}已经添加你为好友", Toast.LENGTH_LONG).show()
                     }
                 }
             }
@@ -270,7 +280,6 @@ class MainActivity : AppCompatActivity() {
     fun mainHeartBeatTest(act: MainActivity) {
         Thread(listenforMessage).start()
     }
-
 
 
 }
